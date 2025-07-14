@@ -431,6 +431,12 @@ function AdminDashboard({ user, onLogout }) {
                             Generuj QR
                           </button>
                           <button
+                            onClick={() => downloadQRPDF(employee)}
+                            className="text-purple-600 hover:text-purple-900 mr-4"
+                          >
+                            Pobierz PDF
+                          </button>
+                          <button
                             onClick={() => handleDeleteEmployee(employee.id)}
                             className="text-red-600 hover:text-red-900"
                           >
