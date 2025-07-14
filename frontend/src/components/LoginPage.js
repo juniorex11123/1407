@@ -24,8 +24,12 @@ function LoginPage({ onLogin }) {
       console.error('Login error:', error);
       if (error.response?.status === 401) {
         setError('Błędne dane logowania');
-      } else {
+      } else if (error.response?.status === 422) {
+        setError('Błędne dane logowania');
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
         setError('Błąd połączenia z serwerem');
+      } else {
+        setError('Błąd podczas logowania. Spróbuj ponownie.');
       }
     }
 
