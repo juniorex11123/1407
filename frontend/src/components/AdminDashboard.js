@@ -11,7 +11,7 @@ function AdminDashboard({ user, onLogout }) {
 
   // Employee Summary state
   const [employeeSummary, setEmployeeSummary] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedSummaryEmployee, setSelectedSummaryEmployee] = useState(null);
   const [employeeMonths, setEmployeeMonths] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [employeeDays, setEmployeeDays] = useState([]);
