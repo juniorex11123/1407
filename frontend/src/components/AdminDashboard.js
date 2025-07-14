@@ -70,6 +70,72 @@ function AdminDashboard({ user, onLogout }) {
     }
   };
 
+  // Employee Summary Functions
+  const loadEmployeeSummary = async (month, year) => {
+    try {
+      setLoading(true);
+      setError('');
+      const summaryData = await employeeSummaryAPI.getSummary(month, year);
+      setEmployeeSummary(summaryData);
+    } catch (error) {
+      console.error('Error loading employee summary:', error);
+      setError('Błąd podczas ładowania podsumowania pracowników');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmployeeClick = async (employee) => {
+    try {
+      setSelectedSummaryEmployee(employee);
+      setLoading(true);
+      setError('');
+      
+      const monthsData = await employeeSummaryAPI.getEmployeeMonths(employee.employee_id);
+      setEmployeeMonths(monthsData);
+      setSummaryView('months');
+    } catch (error) {
+      console.error('Error loading employee months:', error);
+      setError('Błąd podczas ładowania miesięcy pracownika');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMonthClick = async (month) => {
+    try {
+      setSelectedMonth(month);
+      setLoading(true);
+      setError('');
+      
+      const daysData = await employeeSummaryAPI.getEmployeeDays(
+        selectedSummaryEmployee.employee_id, 
+        month.month
+      );
+      setEmployeeDays(daysData);
+      setSummaryView('days');
+    } catch (error) {
+      console.error('Error loading employee days:', error);
+      setError('Błąd podczas ładowania dni pracownika');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToSummary = () => {
+    setSummaryView('main');
+    setSelectedSummaryEmployee(null);
+    setEmployeeMonths([]);
+    setSelectedMonth(null);
+    setEmployeeDays([]);
+  };
+
+  const handleBackToMonths = () => {
+    setSummaryView('months');
+    setSelectedMonth(null);
+    setEmployeeDays([]);
+  };
+
   const generateQRCode = async (employee) => {
     try {
       setError('');
