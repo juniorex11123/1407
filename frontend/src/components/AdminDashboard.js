@@ -268,8 +268,14 @@ function AdminDashboard({ user, onLogout }) {
         {activeTab === 'employees' && (
           <div>
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 border-b">
+              <div className="px-6 py-4 border-b flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-800">Lista pracowników</h2>
+                <button
+                  onClick={handleAddEmployee}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Dodaj pracownika
+                </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -313,10 +319,22 @@ function AdminDashboard({ user, onLogout }) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
-                            onClick={() => generateQRCode(employee)}
+                            onClick={() => handleEditEmployee(employee)}
                             className="text-blue-600 hover:text-blue-900 mr-4"
                           >
+                            Edytuj
+                          </button>
+                          <button
+                            onClick={() => generateQRCode(employee)}
+                            className="text-green-600 hover:text-green-900 mr-4"
+                          >
                             Generuj QR
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEmployee(employee.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Usuń
                           </button>
                         </td>
                       </tr>
