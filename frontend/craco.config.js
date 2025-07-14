@@ -11,7 +11,7 @@ module.exports = {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
-    configure: (webpackConfig) => {
+    configure: (webpackConfig, { env }) => {
       
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
@@ -20,27 +20,20 @@ module.exports = {
           return !(plugin.constructor.name === 'HotModuleReplacementPlugin');
         });
         
-        // Disable watch mode
+        // Disable watch mode completely
         webpackConfig.watch = false;
         webpackConfig.watchOptions = {
           ignored: /.*/, // Ignore all files
         };
-      } else {
-        // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
-          ...webpackConfig.watchOptions,
-          ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/build/**',
-            '**/dist/**',
-            '**/coverage/**',
-            '**/public/**',
-          ],
-        };
       }
       
       return webpackConfig;
+    },
+  },
+  devServer: {
+    watchFiles: ['src/**/*', 'public/**/*'],
+    static: {
+      directory: path.join(__dirname, 'public'),
     },
   },
 };
