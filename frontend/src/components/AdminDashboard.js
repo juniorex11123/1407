@@ -183,57 +183,6 @@ function AdminDashboard({ user, onLogout }) {
     }
   };
 
-  // User Management Functions
-  const handleAddUser = () => {
-    setEditingUser(null);
-    setUserForm({ username: '', password: '', type: 'user' });
-    setShowUserModal(true);
-  };
-
-  const handleEditUser = (user) => {
-    setEditingUser(user);
-    setUserForm({ 
-      username: user.username, 
-      password: '', 
-      type: user.type
-    });
-    setShowUserModal(true);
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tego użytkownika?')) {
-      try {
-        await usersAPI.delete(userId);
-        await loadData();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        setError('Błąd podczas usuwania użytkownika');
-      }
-    }
-  };
-
-  const handleUserSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const userData = { ...userForm };
-      
-      if (editingUser) {
-        // Don't send password if it's empty (keep existing password)
-        if (!userData.password) {
-          delete userData.password;
-        }
-        await usersAPI.update(editingUser.id, userData);
-      } else {
-        await usersAPI.create(userData);
-      }
-      setShowUserModal(false);
-      await loadData();
-    } catch (error) {
-      console.error('Error saving user:', error);
-      setError('Błąd podczas zapisywania użytkownika');
-    }
-  };
-
   // Get employee name by ID
   const getEmployeeName = (employeeId) => {
     const employee = employees.find(e => e.id === employeeId);
