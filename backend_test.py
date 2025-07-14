@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 
 class TimeTrackerAPITester:
-    def __init__(self, base_url="https://1ece32d4-e477-4330-968e-4ff479ed65b7.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tokens = {}  # Store tokens for different users
