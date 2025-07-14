@@ -85,33 +85,6 @@ function LoginPage({ onLogin }) {
             {loading ? 'Logowanie...' : 'Zaloguj się'}
           </button>
         </form>
-
-        {/* Demo credentials */}
-        <div className="mt-8 space-y-4">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-blue-800 mb-2">
-              🧪 Demo Credentials
-            </h3>
-            <div className="text-xs text-blue-700 space-y-1">
-              <p><strong>Owner:</strong> owner / owner123</p>
-              <p><strong>Admin:</strong> admin / admin123</p>
-              <p><strong>User:</strong> user / user123</p>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-green-800 mb-2">
-              🏢 System Multi-Firm
-            </h3>
-            <div className="text-xs text-green-700 space-y-1">
-              <p>• Właściciele systemu mogą zarządzać wszystkimi firmami</p>
-              <p>• Administratorzy firm mogą zarządzać pracownikami</p>
-              <p>• Użytkownicy mogą skanować kody QR</p>
-              <p>• Każda firma ma własnych administratorów i użytkowników</p>
-              <p>• Dane firm są całkowicie oddzielone</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
