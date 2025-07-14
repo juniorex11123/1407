@@ -82,8 +82,19 @@ function AdminDashboard({ user, onLogout }) {
   const handleEditTimeEntry = (timeEntry) => {
     setEditingTimeEntry(timeEntry);
     setTimeEntryForm({
+      employee_id: timeEntry.employee_id,
       check_in: timeEntry.check_in ? new Date(timeEntry.check_in).toISOString().slice(0, 16) : '',
       check_out: timeEntry.check_out ? new Date(timeEntry.check_out).toISOString().slice(0, 16) : ''
+    });
+    setShowTimeEntryModal(true);
+  };
+
+  const handleAddTimeEntry = () => {
+    setEditingTimeEntry(null);
+    setTimeEntryForm({
+      employee_id: '',
+      check_in: '',
+      check_out: ''
     });
     setShowTimeEntryModal(true);
   };
@@ -91,17 +102,23 @@ function AdminDashboard({ user, onLogout }) {
   const handleTimeEntrySubmit = async (e) => {
     e.preventDefault();
     try {
-      const updateData = {
+      const entryData = {
+        employee_id: timeEntryForm.employee_id,
         check_in: timeEntryForm.check_in ? new Date(timeEntryForm.check_in).toISOString() : null,
         check_out: timeEntryForm.check_out ? new Date(timeEntryForm.check_out).toISOString() : null
       };
       
-      await timeEntriesAPI.update(editingTimeEntry.id, updateData);
+      if (editingTimeEntry) {
+        await timeEntriesAPI.update(editingTimeEntry.id, entryData);
+      } else {
+        await timeEntriesAPI.create(entryData);
+      }
+      
       setShowTimeEntryModal(false);
       await loadData();
     } catch (error) {
-      console.error('Error updating time entry:', error);
-      setError('Błąd podczas aktualizacji wpisu czasu');
+      console.error('Error saving time entry:', error);
+      setError('Błąd podczas zapisywania wpisu czasu');
     }
   };
 
@@ -114,6 +131,57 @@ function AdminDashboard({ user, onLogout }) {
         console.error('Error deleting time entry:', error);
         setError('Błąd podczas usuwania wpisu czasu');
       }
+    }
+  };
+
+  // User Management Functions
+  const handleAddUser = () => {
+    setEditingUser(null);
+    setUserForm({ username: '', password: '', type: 'user' });
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setUserForm({ 
+      username: user.username, 
+      password: '', 
+      type: user.type
+    });
+    setShowUserModal(true);
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm('Czy na pewno chcesz usunąć tego użytkownika?')) {
+      try {
+        await usersAPI.delete(userId);
+        await loadData();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        setError('Błąd podczas usuwania użytkownika');
+      }
+    }
+  };
+
+  const handleUserSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const userData = { ...userForm };
+      
+      if (editingUser) {
+        // Don't send password if it's empty (keep existing password)
+        if (!userData.password) {
+          delete userData.password;
+        }
+        await usersAPI.update(editingUser.id, userData);
+      } else {
+        await usersAPI.create(userData);
+      }
+      setShowUserModal(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      setError('Błąd podczas zapisywania użytkownika');
     }
   };
 
