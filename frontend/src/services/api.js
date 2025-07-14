@@ -123,33 +123,30 @@ export const employeesAPI = {
   
   downloadQRPDF: async (id, employeeName) => {
     try {
-      // Use fetch instead of axios for better blob handling
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/employees/${id}/qr-pdf`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      console.log('Downloading PDF for employee:', employeeName, 'ID:', id);
+      console.log('API URL:', API_URL);
+      
+      const response = await api.get(`/employees/${id}/qr-pdf`, {
+        responseType: 'blob'
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
+      console.log('Response received:', response.status);
       
       // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       const safeName = employeeName.replace(/[^a-zA-Z0-9]/g, '_');
       link.download = `qr_code_${safeName}.pdf`;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      return blob;
+      console.log('PDF download completed successfully');
+      return response.data;
     } catch (error) {
       console.error('Error downloading PDF:', error);
       throw error;
