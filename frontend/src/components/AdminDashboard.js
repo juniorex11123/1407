@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { employeesAPI, timeEntriesAPI } from '../services/api';
+import { employeesAPI, timeEntriesAPI, usersAPI } from '../services/api';
 
 function AdminDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('employees');
