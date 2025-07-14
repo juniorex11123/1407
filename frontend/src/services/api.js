@@ -145,4 +145,26 @@ export const timeEntriesAPI = {
   },
 };
 
+// Employee Summary API
+export const employeeSummaryAPI = {
+  getSummary: async (month, year) => {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', year);
+    
+    const response = await api.get(`/employee-summary?${params}`);
+    return response.data;
+  },
+  
+  getEmployeeMonths: async (employeeId) => {
+    const response = await api.get(`/employee-months/${employeeId}`);
+    return response.data;
+  },
+  
+  getEmployeeDays: async (employeeId, yearMonth) => {
+    const response = await api.get(`/employee-days/${employeeId}/${yearMonth}`);
+    return response.data;
+  },
+};
+
 export default api;
