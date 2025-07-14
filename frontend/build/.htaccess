@@ -1,0 +1,59 @@
+# .htaccess dla TimeTracker Pro React App
+# Skopiuj ten plik do głównego katalogu swojej domeny (public_html)
+
+# Wyłącz MultiViews dla prawidłowego działania React Router
+Options -MultiViews
+
+# Włącz moduł RewriteEngine
+RewriteEngine On
+
+# Przekieruj wszystkie żądania do index.html jeśli plik nie istnieje
+# To pozwala React Router obsługiwać routing po stronie klienta
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+# Ustaw nagłówki cache dla statycznych plików
+<IfModule mod_expires.c>
+    ExpiresActive on
+    
+    # Pliki CSS i JS - cache na 1 rok
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    
+    # Obrazy - cache na 1 miesiąc
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    
+    # HTML - bez cache (dla development)
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# Kompresja GZIP dla lepszej wydajności
+<IfModule mod_deflate.c>
+    # Kompresuj tekst, HTML, JavaScript, CSS, XML i czcionki
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# Zabezpieczenia
+<IfModule mod_headers.c>
+    # Zapobiegaj clickjacking
+    Header always append X-Frame-Options SAMEORIGIN
+    
+    # Zapobiegaj MIME sniffing
+    Header set X-Content-Type-Options nosniff
+    
+    # Włącz XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
