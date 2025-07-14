@@ -410,8 +410,20 @@ async def get_users(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/users", response_model=UserResponse)
 async def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)):
-    """Create new user (owner only)"""
-    if current_user["type"] != "owner":
+    """Create new user (owner: any user, admin: users for their company only)"""
+    if current_user["type"] == "owner":
+        # Owner can create users for any company
+        pass
+    elif current_user["type"] == "admin":
+        # Admin can only create users for their company
+        if not user.company_id:
+            user.company_id = current_user["company_id"]
+        elif user.company_id != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Cannot create users for other companies")
+        # Admin cannot create owner accounts
+        if user.type == "owner":
+            raise HTTPException(status_code=403, detail="Cannot create owner accounts")
+    else:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if username already exists
