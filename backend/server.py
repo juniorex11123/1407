@@ -633,10 +633,18 @@ async def get_time_entries(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/time-entries", response_model=TimeEntry)
 async def create_time_entry(time_entry: TimeEntryCreate, current_user: dict = Depends(get_current_user)):
-    """Create new time entry"""
+    """Create new time entry (admin/owner only)"""
+    if current_user["type"] not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     employee = await db.employees.find_one({"id": time_entry.employee_id})
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Admin can only create time entries for employees from their company
+    if current_user["type"] == "admin":
+        if employee.get("company_id") != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Cannot create time entries for employees from other companies")
     
     # Calculate total hours if check_out is provided
     total_hours = None
