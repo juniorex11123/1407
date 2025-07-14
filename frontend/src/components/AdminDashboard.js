@@ -9,6 +9,14 @@ function AdminDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Employee Summary state
+  const [employeeSummary, setEmployeeSummary] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeeMonths, setEmployeeMonths] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [employeeDays, setEmployeeDays] = useState([]);
+  const [summaryView, setSummaryView] = useState('main'); // 'main', 'months', 'days'
+
   // QR Code modal state
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
