@@ -68,6 +68,77 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
 
+@api_router.post("/qr/generate", response_model=QRCodeResponse)
+async def generate_qr_code(request: QRCodeRequest):
+    try:
+        # Create QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=request.size,
+            border=request.border,
+        )
+        qr.add_data(request.text)
+        qr.make(fit=True)
+        
+        # Create image
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        # Save to database
+        qr_data = {
+            "id": str(uuid.uuid4()),
+            "text": request.text,
+            "image_base64": img_str,
+            "timestamp": datetime.utcnow()
+        }
+        await db.qr_codes.insert_one(qr_data)
+        
+        return QRCodeResponse(**qr_data)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating QR code: {str(e)}")
+
+@api_router.get("/qr/download/{qr_id}")
+async def download_qr_code(qr_id: str):
+    try:
+        # Find QR code in database
+        qr_data = await db.qr_codes.find_one({"id": qr_id})
+        if not qr_data:
+            raise HTTPException(status_code=404, detail="QR code not found")
+        
+        # Convert base64 to image
+        img_data = base64.b64decode(qr_data["image_base64"])
+        img = Image.open(io.BytesIO(img_data))
+        
+        # Convert to JPEG
+        output = io.BytesIO()
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGB")
+        img.save(output, format="JPEG", quality=95)
+        output.seek(0)
+        
+        return StreamingResponse(
+            io.BytesIO(output.read()),
+            media_type="image/jpeg",
+            headers={"Content-Disposition": f"attachment; filename=qr_code_{qr_id}.jpg"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading QR code: {str(e)}")
+
+@api_router.get("/qr/list", response_model=List[QRCodeResponse])
+async def get_qr_codes():
+    try:
+        qr_codes = await db.qr_codes.find().to_list(1000)
+        return [QRCodeResponse(**qr_code) for qr_code in qr_codes]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching QR codes: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
