@@ -531,20 +531,43 @@ function AdminDashboard({ user, onLogout }) {
         </div>
       )}
 
-      {/* Time Entry Edit Modal */}
-      {showTimeEntryModal && editingTimeEntry && (
+      {/* Time Entry Edit/Add Modal */}
+      {showTimeEntryModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Edytuj wpis czasu - {getEmployeeName(editingTimeEntry.employee_id)}
+                {editingTimeEntry ? 
+                  `Edytuj wpis czasu - ${getEmployeeName(editingTimeEntry.employee_id)}` : 
+                  'Dodaj nowy wpis czasu'
+                }
               </h3>
               <form onSubmit={handleTimeEntrySubmit}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Data: {new Date(editingTimeEntry.date).toLocaleDateString('pl-PL')}
-                  </label>
-                </div>
+                {!editingTimeEntry && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pracownik
+                    </label>
+                    <select
+                      value={timeEntryForm.employee_id}
+                      onChange={(e) => setTimeEntryForm({ ...timeEntryForm, employee_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Wybierz pracownika</option>
+                      {employees.map(employee => (
+                        <option key={employee.id} value={employee.id}>{employee.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {editingTimeEntry && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data: {new Date(editingTimeEntry.date).toLocaleDateString('pl-PL')}
+                    </label>
+                  </div>
+                )}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Przyjście
@@ -580,7 +603,7 @@ function AdminDashboard({ user, onLogout }) {
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    Zaktualizuj
+                    {editingTimeEntry ? 'Zaktualizuj' : 'Dodaj'}
                   </button>
                 </div>
               </form>
