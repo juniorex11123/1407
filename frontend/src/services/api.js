@@ -43,15 +43,8 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: async (username, password) => {
-    console.log('🔍 authAPI.login called with:', { username, password: '***' });
-    try {
-      const response = await api.post('/auth/login', { username, password });
-      console.log('✅ authAPI.login response:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ authAPI.login error:', error);
-      throw error;
-    }
+    const response = await api.post('/auth/login', { username, password });
+    return response.data;
   },
 };
 
