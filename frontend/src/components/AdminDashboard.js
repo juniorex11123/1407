@@ -149,6 +149,16 @@ function AdminDashboard({ user, onLogout }) {
     }
   };
 
+  const downloadQRPDF = async (employee) => {
+    try {
+      setError('');
+      await employeesAPI.downloadQRPDF(employee.id, employee.name);
+    } catch (error) {
+      console.error('Error downloading QR PDF:', error);
+      setError('Błąd podczas pobierania PDF z kodem QR');
+    }
+  };
+
   // Employee Management Functions
   const handleAddEmployee = () => {
     setEditingEmployee(null);
