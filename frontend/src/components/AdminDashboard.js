@@ -45,16 +45,14 @@ function AdminDashboard({ user, onLogout }) {
         setCompanyInfo({ id: user.company_id, name: user.company_name });
       }
 
-      // Load employees, time reports, and users
-      const [employeesData, timeEntriesData, usersData] = await Promise.all([
+      // Load employees and time reports
+      const [employeesData, timeEntriesData] = await Promise.all([
         employeesAPI.getAll(),
-        timeEntriesAPI.getAll(),
-        usersAPI.getAll()
+        timeEntriesAPI.getAll()
       ]);
 
       setEmployees(employeesData);
       setTimeReports(timeEntriesData);
-      setUsers(usersData);
 
     } catch (error) {
       console.error('Error loading data:', error);
