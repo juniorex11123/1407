@@ -117,7 +117,26 @@ export const employeesAPI = {
   },
   
   generateQR: async (id) => {
-    const response = await api.post(`/employees/${id}/qr`);
+    const response = await api.get(`/employees/${id}/qr`);
+    return response.data;
+  },
+  
+  downloadQRPDF: async (id, employeeName) => {
+    const response = await api.get(`/employees/${id}/qr-pdf`, {
+      responseType: 'blob'
+    });
+    
+    // Create download link
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `qr_code_${employeeName.replace(' ', '_')}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
     return response.data;
   },
 };
