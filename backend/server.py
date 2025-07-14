@@ -411,14 +411,24 @@ async def get_users(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/users", response_model=UserResponse)
 async def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)):
-    """Create new user (owner only)"""
-    if current_user["type"] != "owner":
+    """Create new user (owner: any user, admin: users in their company only)"""
+    if current_user["type"] not in ["owner", "admin"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Check if username already exists
     existing_user = await db.users.find_one({"username": user.username})
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Admin can only create users in their own company
+    if current_user["type"] == "admin":
+        if user.company_id and user.company_id != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Admin can only create users in their own company")
+        # Force company_id to be admin's company
+        user.company_id = current_user["company_id"]
+        # Admin can only create 'user' type accounts, not other admins or owners
+        if user.type not in ["user"]:
+            raise HTTPException(status_code=403, detail="Admin can only create regular users")
     
     # Get company name if provided
     company_name = None
