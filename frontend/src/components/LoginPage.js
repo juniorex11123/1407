@@ -39,7 +39,7 @@ function LoginPage({ onLogin }) {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             System Ewidencji
           </h1>
-          <p className="text-gray-600">Czasu Pracy - Multi-Firm</p>
+          <p className="text-gray-600">Czasu Pracy</p>
         </div>
 
         {error && (
