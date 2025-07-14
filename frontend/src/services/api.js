@@ -123,12 +123,22 @@ export const employeesAPI = {
   
   downloadQRPDF: async (id, employeeName) => {
     try {
-      const response = await api.get(`/employees/${id}/qr-pdf`, {
-        responseType: 'blob'
+      // Use fetch instead of axios for better blob handling
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/employees/${id}/qr-pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      
       // Create download link
-      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -139,7 +149,7 @@ export const employeesAPI = {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      return response.data;
+      return blob;
     } catch (error) {
       console.error('Error downloading PDF:', error);
       throw error;
