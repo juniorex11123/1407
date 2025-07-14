@@ -75,6 +75,59 @@ function AdminDashboard({ user, onLogout }) {
     }
   };
 
+  // Employee Management Functions
+  const handleAddEmployee = () => {
+    setEditingEmployee(null);
+    setEmployeeForm({
+      name: '',
+      is_active: true
+    });
+    setShowEmployeeModal(true);
+  };
+
+  const handleEditEmployee = (employee) => {
+    setEditingEmployee(employee);
+    setEmployeeForm({
+      name: employee.name,
+      is_active: employee.is_active
+    });
+    setShowEmployeeModal(true);
+  };
+
+  const handleDeleteEmployee = async (employeeId) => {
+    if (window.confirm('Czy na pewno chcesz usunąć tego pracownika?')) {
+      try {
+        await employeesAPI.delete(employeeId);
+        await loadData();
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+        setError('Błąd podczas usuwania pracownika');
+      }
+    }
+  };
+
+  const handleEmployeeSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const employeeData = {
+        ...employeeForm,
+        company_id: user.company_id
+      };
+      
+      if (editingEmployee) {
+        await employeesAPI.update(editingEmployee.id, employeeData);
+      } else {
+        await employeesAPI.create(employeeData);
+      }
+      
+      setShowEmployeeModal(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      setError('Błąd podczas zapisywania pracownika');
+    }
+  };
+
   const handleEditTimeEntry = (timeEntry) => {
     setEditingTimeEntry(timeEntry);
     setTimeEntryForm({
