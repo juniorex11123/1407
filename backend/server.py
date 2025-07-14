@@ -620,6 +620,80 @@ async def generate_employee_qr(employee_id: str, current_user: dict = Depends(ge
         qr_code_image=qr_image
     )
 
+@api_router.get("/employees/{employee_id}/qr-pdf")
+async def download_employee_qr_pdf(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Download QR code PDF for employee (admin only)"""
+    if current_user["type"] not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    employee = await db.employees.find_one({"id": employee_id})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Generate QR code image
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(employee["qr_code"])
+    qr.make(fit=True)
+    
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    # Add title
+    p.setFont("Helvetica-Bold", 24)
+    p.drawString(50, height - 100, "Kod QR Pracownika")
+    
+    # Add employee name
+    p.setFont("Helvetica", 18)
+    p.drawString(50, height - 140, f"Imię i nazwisko: {employee['name']}")
+    
+    # Add QR code ID
+    p.setFont("Helvetica", 14)
+    p.drawString(50, height - 170, f"Kod QR: {employee['qr_code']}")
+    
+    # Add QR code image
+    img_buffer = io.BytesIO()
+    qr_img.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    
+    # Position QR code in center
+    qr_size = 200
+    x_pos = (width - qr_size) / 2
+    y_pos = height - 400
+    
+    p.drawImage(ImageReader(img_buffer), x_pos, y_pos, width=qr_size, height=qr_size)
+    
+    # Add instructions
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y_pos - 50, "Instrukcje:")
+    p.drawString(50, y_pos - 70, "1. Zeskanuj kod QR aby zarejestrować przyjście/wyjście")
+    p.drawString(50, y_pos - 90, "2. Trzymaj kod QR w dobrze oświetlonym miejscu")
+    p.drawString(50, y_pos - 110, "3. W razie problemów skontaktuj się z administratorem")
+    
+    # Add footer
+    p.setFont("Helvetica", 10)
+    p.drawString(50, 50, f"Wygenerowano: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    p.drawString(50, 30, "TimeTracker Pro - System zarządzania czasem pracy")
+    
+    p.showPage()
+    p.save()
+    
+    buffer.seek(0)
+    pdf_content = buffer.getvalue()
+    buffer.close()
+    
+    # Return PDF as response
+    filename = f"qr_code_{employee['name'].replace(' ', '_')}_{employee['qr_code']}.pdf"
+    
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 # === TIME ENTRY ROUTES ===
 
 @api_router.get("/time-entries", response_model=List[TimeEntry])
