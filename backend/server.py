@@ -460,13 +460,24 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
 
 @api_router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(user_id: str, user: UserUpdate, current_user: dict = Depends(get_current_user)):
-    """Update user (owner only)"""
-    if current_user["type"] != "owner":
+    """Update user (owner: any user, admin: users in their company only)"""
+    if current_user["type"] not in ["owner", "admin"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
     existing_user = await db.users.find_one({"id": user_id})
     if not existing_user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Admin can only update users in their own company
+    if current_user["type"] == "admin":
+        if existing_user.get("company_id") != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Admin can only update users in their own company")
+        # Admin cannot change user type to admin or owner
+        if user.type and user.type not in ["user"]:
+            raise HTTPException(status_code=403, detail="Admin can only set user type to 'user'")
+        # Admin cannot change company_id
+        if user.company_id and user.company_id != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Admin cannot change user's company")
     
     update_data = {k: v for k, v in user.dict().items() if v is not None}
     if "password" in update_data:
