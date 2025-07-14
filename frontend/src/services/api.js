@@ -122,22 +122,28 @@ export const employeesAPI = {
   },
   
   downloadQRPDF: async (id, employeeName) => {
-    const response = await api.get(`/employees/${id}/qr-pdf`, {
-      responseType: 'blob'
-    });
-    
-    // Create download link
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `qr_code_${employeeName.replace(' ', '_')}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-    
-    return response.data;
+    try {
+      const response = await api.get(`/employees/${id}/qr-pdf`, {
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeName = employeeName.replace(/[^a-zA-Z0-9]/g, '_');
+      link.download = `qr_code_${safeName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      throw error;
+    }
   },
 };
 
