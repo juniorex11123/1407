@@ -520,6 +520,225 @@ function AdminDashboard({ user, onLogout }) {
             </div>
           </div>
         )}
+
+        {activeTab === 'summary' && (
+          <div>
+            {summaryView === 'main' && (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Podsumowanie pracowników - {new Date().toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Kliknij na pracownika, aby zobaczyć szczegóły miesięcy
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Imię i nazwisko
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Liczba godzin w miesiącu
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Akcje
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {employeeSummary.map((employee) => (
+                        <tr key={employee.employee_id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {employee.employee_name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 font-semibold">
+                              {employee.total_hours.toFixed(1)}h
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => handleEmployeeClick(employee)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Zobacz miesiące
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {employeeSummary.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      Brak danych o pracownikach
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {summaryView === 'months' && selectedSummaryEmployee && (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        Miesiące pracy - {selectedSummaryEmployee.employee_name}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Kliknij na miesiąc, aby zobaczyć szczegóły dni
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleBackToSummary}
+                      className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                    >
+                      ← Powrót do podsumowania
+                    </button>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Miesiąc
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Liczba godzin
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Dni pracy
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Akcje
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {employeeMonths.map((month) => (
+                        <tr key={month.month} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {new Date(month.month + '-01').toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 font-semibold">
+                              {month.total_hours.toFixed(1)}h
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {month.days_worked} dni
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => handleMonthClick(month)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Zobacz dni
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {employeeMonths.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      Brak danych o miesiącach pracy
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {summaryView === 'days' && selectedSummaryEmployee && selectedMonth && (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        Dni pracy - {selectedSummaryEmployee.employee_name}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(selectedMonth.month + '-01').toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleBackToMonths}
+                      className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                    >
+                      ← Powrót do miesięcy
+                    </button>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Data
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Przyjście
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Wyjście
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Godziny pracy
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {employeeDays.map((day) => (
+                        <tr key={day.date}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {new Date(day.date).toLocaleDateString('pl-PL', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {day.check_in || '-'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {day.check_out || '-'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900 font-semibold">
+                              {day.total_hours ? day.total_hours.toFixed(1) + 'h' : '-'}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {employeeDays.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      Brak danych o dniach pracy
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* QR Code Modal */}
