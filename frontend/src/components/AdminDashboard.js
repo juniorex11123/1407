@@ -5,6 +5,7 @@ function AdminDashboard({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('employees');
   const [employees, setEmployees] = useState([]);
   const [timeReports, setTimeReports] = useState([]);
+  const [users, setUsers] = useState([]);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,12 +15,22 @@ function AdminDashboard({ user, onLogout }) {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [qrCodeData, setQRCodeData] = useState(null);
 
-  // Time entry editing state
+  // Time entry editing/adding state
   const [showTimeEntryModal, setShowTimeEntryModal] = useState(false);
   const [editingTimeEntry, setEditingTimeEntry] = useState(null);
   const [timeEntryForm, setTimeEntryForm] = useState({
+    employee_id: '',
     check_in: '',
     check_out: ''
+  });
+
+  // User management state
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userForm, setUserForm] = useState({ 
+    username: '', 
+    password: '', 
+    type: 'user' 
   });
 
   useEffect(() => {
