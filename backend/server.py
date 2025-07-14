@@ -512,8 +512,26 @@ async def update_user(user_id: str, user: UserUpdate, current_user: dict = Depen
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
-    """Delete user (owner only)"""
-    if current_user["type"] != "owner":
+    """Delete user (owner: any user, admin: users from their company only)"""
+    existing_user = await db.users.find_one({"id": user_id})
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if current_user["type"] == "owner":
+        # Owner can delete any user (except themselves)
+        if existing_user["id"] == current_user["id"]:
+            raise HTTPException(status_code=403, detail="Cannot delete yourself")
+    elif current_user["type"] == "admin":
+        # Admin can only delete users from their company
+        if existing_user.get("company_id") != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Cannot delete users from other companies")
+        # Admin cannot delete owner accounts
+        if existing_user.get("type") == "owner":
+            raise HTTPException(status_code=403, detail="Cannot delete owner accounts")
+        # Admin cannot delete themselves
+        if existing_user["id"] == current_user["id"]:
+            raise HTTPException(status_code=403, detail="Cannot delete yourself")
+    else:
         raise HTTPException(status_code=403, detail="Access denied")
     
     result = await db.users.delete_one({"id": user_id})
