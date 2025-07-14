@@ -603,7 +603,7 @@ async def delete_employee(employee_id: str, current_user: dict = Depends(get_cur
     
     return {"message": "Employee deleted successfully"}
 
-@api_router.post("/employees/{employee_id}/qr", response_model=QRResponse)
+@api_router.get("/employees/{employee_id}/qr", response_model=QRResponse)
 async def generate_employee_qr(employee_id: str, current_user: dict = Depends(get_current_user)):
     """Generate QR code for employee (admin only)"""
     if current_user["type"] not in ["owner", "admin"]:
