@@ -702,6 +702,192 @@ async def delete_time_entry(entry_id: str, current_user: dict = Depends(get_curr
     
     return {"message": "Time entry deleted successfully"}
 
+# === EMPLOYEE SUMMARY ROUTES ===
+
+class EmployeeSummary(BaseModel):
+    employee_id: str
+    employee_name: str
+    total_hours: float
+    current_month: str
+    year: int
+
+class EmployeeMonthSummary(BaseModel):
+    employee_id: str
+    employee_name: str
+    month: str
+    year: int
+    total_hours: float
+    days_worked: int
+
+class EmployeeDayDetail(BaseModel):
+    employee_id: str
+    employee_name: str
+    date: str
+    check_in: str
+    check_out: Optional[str] = None
+    total_hours: Optional[float] = None
+
+@api_router.get("/employee-summary", response_model=List[EmployeeSummary])
+async def get_employee_summary(month: Optional[str] = None, year: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    """Get employee summary for current month or specified month/year (admin only)"""
+    if current_user["type"] not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    from datetime import datetime
+    import calendar
+    
+    # If no month/year specified, use current month
+    if not month or not year:
+        now = datetime.now()
+        year = now.year
+        month = now.strftime("%m")
+    
+    # Get employees from user's company
+    if current_user["type"] == "owner":
+        employees = await db.employees.find().to_list(1000)
+    else:
+        employees = await db.employees.find({"company_id": current_user["company_id"]}).to_list(1000)
+    
+    employee_summaries = []
+    
+    for employee in employees:
+        # Get time entries for this employee for the specified month/year
+        month_start = f"{year}-{month:0>2}-01"
+        if int(month) == 12:
+            next_month = f"{year + 1}-01-01"
+        else:
+            next_month = f"{year}-{int(month) + 1:0>2}-01"
+        
+        time_entries = await db.time_entries.find({
+            "employee_id": employee["id"],
+            "date": {
+                "$gte": month_start,
+                "$lt": next_month
+            }
+        }).to_list(1000)
+        
+        total_hours = sum(entry.get("total_hours", 0) for entry in time_entries)
+        
+        employee_summaries.append(EmployeeSummary(
+            employee_id=employee["id"],
+            employee_name=employee["name"],
+            total_hours=total_hours,
+            current_month=f"{year}-{month:0>2}",
+            year=year
+        ))
+    
+    return employee_summaries
+
+@api_router.get("/employee-months/{employee_id}", response_model=List[EmployeeMonthSummary])
+async def get_employee_months(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all months with work data for a specific employee (admin only)"""
+    if current_user["type"] not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Check if employee exists and user has access
+    employee = await db.employees.find_one({"id": employee_id})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Check access permissions
+    if current_user["type"] == "admin" and employee.get("company_id") != current_user["company_id"]:
+        raise HTTPException(status_code=403, detail="Access denied to this employee")
+    
+    # Get all time entries for this employee
+    time_entries = await db.time_entries.find({"employee_id": employee_id}).to_list(1000)
+    
+    # Group by month/year
+    monthly_data = {}
+    for entry in time_entries:
+        date_str = entry["date"]
+        year_month = date_str[:7]  # Format: YYYY-MM
+        year, month = year_month.split('-')
+        
+        if year_month not in monthly_data:
+            monthly_data[year_month] = {
+                "total_hours": 0,
+                "days_worked": set()
+            }
+        
+        monthly_data[year_month]["total_hours"] += entry.get("total_hours", 0)
+        monthly_data[year_month]["days_worked"].add(date_str)
+    
+    # Convert to response format
+    month_summaries = []
+    for year_month, data in monthly_data.items():
+        year, month = year_month.split('-')
+        month_summaries.append(EmployeeMonthSummary(
+            employee_id=employee_id,
+            employee_name=employee["name"],
+            month=year_month,
+            year=int(year),
+            total_hours=data["total_hours"],
+            days_worked=len(data["days_worked"])
+        ))
+    
+    # Sort by year and month (newest first)
+    month_summaries.sort(key=lambda x: x.month, reverse=True)
+    
+    return month_summaries
+
+@api_router.get("/employee-days/{employee_id}/{year_month}", response_model=List[EmployeeDayDetail])
+async def get_employee_days(employee_id: str, year_month: str, current_user: dict = Depends(get_current_user)):
+    """Get daily work details for a specific employee and month (admin only)"""
+    if current_user["type"] not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Check if employee exists and user has access
+    employee = await db.employees.find_one({"id": employee_id})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Check access permissions
+    if current_user["type"] == "admin" and employee.get("company_id") != current_user["company_id"]:
+        raise HTTPException(status_code=403, detail="Access denied to this employee")
+    
+    # Validate year_month format (YYYY-MM)
+    try:
+        year, month = year_month.split('-')
+        year = int(year)
+        month = int(month)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid year_month format. Use YYYY-MM")
+    
+    # Get time entries for this employee and month
+    month_start = f"{year}-{month:0>2}-01"
+    if month == 12:
+        next_month = f"{year + 1}-01-01"
+    else:
+        next_month = f"{year}-{month + 1:0>2}-01"
+    
+    time_entries = await db.time_entries.find({
+        "employee_id": employee_id,
+        "date": {
+            "$gte": month_start,
+            "$lt": next_month
+        }
+    }).to_list(1000)
+    
+    # Convert to response format
+    day_details = []
+    for entry in time_entries:
+        check_in_str = entry["check_in"].strftime("%H:%M") if entry.get("check_in") else ""
+        check_out_str = entry["check_out"].strftime("%H:%M") if entry.get("check_out") else None
+        
+        day_details.append(EmployeeDayDetail(
+            employee_id=employee_id,
+            employee_name=employee["name"],
+            date=entry["date"],
+            check_in=check_in_str,
+            check_out=check_out_str,
+            total_hours=entry.get("total_hours", 0)
+        ))
+    
+    # Sort by date
+    day_details.sort(key=lambda x: x.date)
+    
+    return day_details
+
 # === ORIGINAL ROUTES (for compatibility) ===
 
 @api_router.get("/")
