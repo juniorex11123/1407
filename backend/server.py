@@ -691,7 +691,11 @@ async def download_employee_qr_pdf(employee_id: str, current_user: dict = Depend
     return Response(
         content=pdf_content,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+            "Cache-Control": "no-cache"
+        }
     )
 
 # === TIME ENTRY ROUTES ===
