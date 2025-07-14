@@ -12,11 +12,8 @@ function LoginPage({ onLogin }) {
     setLoading(true);
     setError('');
 
-    console.log('🔍 Starting login process...');
-
     try {
       const result = await authAPI.login(username, password);
-      console.log('✅ Login successful:', result);
       
       if (result.access_token && result.user) {
         onLogin(result.user, result.access_token);
@@ -24,7 +21,7 @@ function LoginPage({ onLogin }) {
         setError('Błędne dane logowania');
       }
     } catch (error) {
-      console.error('❌ Login error:', error);
+      console.error('Login error:', error);
       if (error.response?.status === 401) {
         setError('Błędne dane logowania');
       } else if (error.response?.status === 422) {
