@@ -379,11 +379,16 @@ async def delete_company(company_id: str, current_user: dict = Depends(get_curre
 
 @api_router.get("/users", response_model=List[UserResponse])
 async def get_users(current_user: dict = Depends(get_current_user)):
-    """Get all users (owner only)"""
-    if current_user["type"] != "owner":
+    """Get users (owner: all users, admin: users from their company)"""
+    if current_user["type"] == "owner":
+        # Owner can see all users
+        users = await db.users.find().to_list(1000)
+    elif current_user["type"] == "admin":
+        # Admin can only see users from their company
+        users = await db.users.find({"company_id": current_user["company_id"]}).to_list(1000)
+    else:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    users = await db.users.find().to_list(1000)
     user_responses = []
     for user in users:
         company_name = user.get("company_name")
