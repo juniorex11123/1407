@@ -461,13 +461,26 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
 
 @api_router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(user_id: str, user: UserUpdate, current_user: dict = Depends(get_current_user)):
-    """Update user (owner only)"""
-    if current_user["type"] != "owner":
-        raise HTTPException(status_code=403, detail="Access denied")
-    
+    """Update user (owner: any user, admin: users from their company only)"""
     existing_user = await db.users.find_one({"id": user_id})
     if not existing_user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    if current_user["type"] == "owner":
+        # Owner can update any user
+        pass
+    elif current_user["type"] == "admin":
+        # Admin can only update users from their company
+        if existing_user.get("company_id") != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Cannot update users from other companies")
+        # Admin cannot change user type to owner
+        if user.type == "owner":
+            raise HTTPException(status_code=403, detail="Cannot create owner accounts")
+        # Admin cannot update owner accounts
+        if existing_user.get("type") == "owner":
+            raise HTTPException(status_code=403, detail="Cannot update owner accounts")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     update_data = {k: v for k, v in user.dict().items() if v is not None}
     if "password" in update_data:
@@ -477,6 +490,8 @@ async def update_user(user_id: str, user: UserUpdate, current_user: dict = Depen
     
     # Get company name if company_id is being updated
     if "company_id" in update_data:
+        if current_user["type"] == "admin" and update_data["company_id"] != current_user["company_id"]:
+            raise HTTPException(status_code=403, detail="Cannot assign users to other companies")
         company = await db.companies.find_one({"id": update_data["company_id"]})
         if company:
             update_data["company_name"] = company["name"]
